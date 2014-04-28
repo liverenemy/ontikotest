@@ -29,9 +29,10 @@
 	<div id="mainmenu">
 		<?php $this->widget('zii.widgets.CMenu',array(
 			'items'=>array(
-				array('label'=>'Студенты и SQL', 'url'=>array('/students/index')),
-				array('label'=>'Сравнение массивов', 'url'=>array('/site/arraysCompareByKeyboard')),
-				array('label'=>'Новости', 'url'=>array('/news/index')),
+				array('label'=>'1. Студенты и SQL', 'url'=>array('/students/index')),
+                array('label'=>'2. Новости', 'url'=>array('/news/index')),
+				array('label'=>'3. JSON API', 'url'=>array('/site/map')),
+                array('label'=>'4. Сравнение массивов', 'url'=>array('/site/arraysCompareByKeyboard')),
 				array('label'=>'Login', 'url'=>array('/site/login'), 'visible'=>Yii::app()->user->isGuest),
 				array('label'=>'Logout ('.Yii::app()->user->name.')', 'url'=>array('/site/logout'), 'visible'=>!Yii::app()->user->isGuest)
 			),
