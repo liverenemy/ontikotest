@@ -98,6 +98,48 @@ class SiteController extends Controller
 		$this->render('login',array('model'=>$model));
 	}
 
+    /**
+     * Получить массивы с клавиатуры и вывести уникальные элементы каждого массива
+     */
+    public function actionArraysCompareByKeyboard()
+    {
+        $this->layout = '//layouts/column2';
+        $diffs = array();
+        if (isset($_POST['arrayString']))
+        {
+            $arrayString = $_POST['arrayString'];
+            $diffs = $this->getUniqueWords($arrayString);
+        }
+        $this->render(
+            'arraysCompareByKeyboard',
+            array(
+                'diffs' => $diffs,
+            )
+        );
+    }
+
+    public function actionArraysCompareByFile()
+    {
+        $this->layout = '//layouts/column2';
+        $diffs = array();
+
+        $uploadFolder = Yii::app()->basePath . '/../uploads'; // в рабочем проекте это стоило бы вынести в конфиг
+
+        if ($newFileName = $this->saveUploadedFile('arrayFile', $uploadFolder))
+        {
+            $arrayString = file_get_contents($newFileName);
+            $diffs = $this->getUniqueWords($arrayString);
+            unlink($newFileName);
+        }
+
+        $this->render(
+            'arraysCompareByFile',
+            array(
+                'diffs' => $diffs,
+            )
+        );
+    }
+
 	/**
 	 * Logs out the current user and redirect to homepage.
 	 */
@@ -106,4 +148,81 @@ class SiteController extends Controller
 		Yii::app()->user->logout();
 		$this->redirect(Yii::app()->homeUrl);
 	}
+
+    /**
+     * Разбить входящую переменную на строки и найти уникальные слова на каждой строке
+     *
+     * @param   string  $text   Строка, которую требуется разбить на массивы
+     * @return  array|false     Массив слов противоположной строки, отсутствующих на данной строке, либо false
+     */
+    protected function getUniqueWords($text)
+    {
+        $strings = explode("\n", $text);
+        if (!is_array($strings))
+        {
+            return false;
+        }
+        $arrays = array();
+        for ($i = 0; $i < count($strings); $i++)
+        {
+            $strings[$i] = trim($strings[$i]);
+            if (empty($strings[$i]))
+            {
+                continue;
+            }
+            $arrays[] = explode(" ", $strings[$i]);
+            foreach ($arrays[count($arrays) - 1] as &$element)
+            {
+                $element = trim($element); // без этого последний элемент каждого массива обрабатывается неверно
+            }
+        }
+        if (count($arrays) < 2)
+        {
+            return false;
+        }
+        return array(
+            'a' => array_diff($arrays[1], $arrays[0]), // элементы массива 1, отсутствующие в массиве 0
+            'b' => array_diff($arrays[0], $arrays[1]), // элементы массива 0, отсутствующие в массиве 1
+        );
+    }
+
+    /**
+     * Сохранить в папку $where загруженный файл с атрибутом name, равным $which
+     *
+     * @param   string      $which
+     * @param   string      $where
+     * @return  bool|string Имя сохраненного файла либо false в случае, если упомянутый файл не был закачан юзером
+     * @throws  Exception   Ошибки: права на папку сохранения не работают, либо иные ошибки загрузки и сохранения
+     */
+    protected function saveUploadedFile($which, $where)
+    {
+        if (!is_writable($where))
+        {
+            throw new Exception(__METHOD__ . ': Upload folder is not writable.');
+        }
+        $uploadedFile = CUploadedFile::getInstanceByName($which);
+        if (!$uploadedFile)
+        {
+            return false;
+        }
+        if ($uploadedFile->hasError)
+        {
+            throw new Exception(__METHOD__ . ': file upload error code ' . $uploadedFile->getError());
+        }
+        $files = scandir($where);
+        $fileNameFound = false;
+        $fileNumber = 0;
+        while (!$fileNameFound)
+        {
+            $fileNumber++;
+            $fileName = $fileNumber . '.tmp';
+            $fileNameFound = !in_array($fileName, $files);
+        }
+        $newFileName = $where . '/' . $fileName;
+        if (!$uploadedFile->saveAs($newFileName))
+        {
+            throw new Exception(__METHOD__ . ': File was uploaded but was not saved.');
+        }
+        return $newFileName;
+    }
 }
