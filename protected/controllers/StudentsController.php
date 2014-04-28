@@ -139,13 +139,13 @@ class StudentsController extends Controller
                 `name`,
                 `grade`
             from
-                `Students`
-                    inner join `Likes`
-                    on `Likes`.`liked_ID` = `Students`.`ID`
+                `students`
+                    inner join `likes`
+                    on `likes`.`liked_ID` = `students`.`ID`
             group by
-                `Students`.ID
+                `students`.ID
             having
-                count(`Likes`.`liked_ID`) > 1";
+                count(`likes`.`liked_ID`) > 1";
         $result = $connection->createCommand($sql)->queryAll();
         $this->render('first', array(
             'students' => $result,
@@ -161,20 +161,20 @@ class StudentsController extends Controller
         $connection=Yii::app()->db;
         $sql="
             select
-                `Students_A`.name,
-                `Students_A`.grade
+                `students_A`.name,
+                `students_A`.grade
             from
-                `Students` `Students_A`,
-                `Students` `Students_B`
-                    left outer join `Likes` `Likes_B` on
-                      `Likes_B`.like_ID = `Students_B`.ID,
-                `Likes` `Likes_A`
+                `students` `students_A`,
+                `students` `students_B`
+                    left outer join `likes` `likes_B` on
+                      `likes_B`.like_ID = `students_B`.ID,
+                `likes` `likes_A`
             where
-                `Likes_A`.like_ID = `Students_A`.ID and
-                `Likes_A`.liked_ID = `Students_B`.ID and
-                `Likes_B`.like_ID is null
+                `likes_A`.like_ID = `students_A`.ID and
+                `likes_A`.liked_ID = `students_B`.ID and
+                `likes_B`.like_ID is null
             group by
-              `Students_B`.ID;
+              `students_B`.ID;
         ";
         $result = $connection->createCommand($sql)->queryAll();
         $this->render('second', array(
@@ -191,17 +191,17 @@ class StudentsController extends Controller
         $connection=Yii::app()->db;
         $sql="
             select
-                `Students`.name,
-                `Students`.grade
+                `students`.name,
+                `students`.grade
             from
-                `Students`
-                    left outer join `Likes` `Likes_From`
-                      on `Likes_From`.like_ID = `Students`.ID
-                    left outer join `Likes` `Likes_To`
-                      on `Likes_To`.liked_ID = `Students`.ID
+                `students`
+                    left outer join `likes` `likes_From`
+                      on `likes_From`.like_ID = `students`.ID
+                    left outer join `likes` `likes_To`
+                      on `likes_To`.liked_ID = `students`.ID
             where
-              `Likes_From`.like_ID is null and
-              `Likes_To`.liked_ID is null
+              `likes_From`.like_ID is null and
+              `likes_To`.liked_ID is null
         ";
         $result = $connection->createCommand($sql)->queryAll();
         $this->render('third', array(
