@@ -98,6 +98,49 @@ class SiteController extends Controller
 		$this->render('login',array('model'=>$model));
 	}
 
+    public function actionJsMap()
+    {
+        $this->layout = '//layouts/column2';
+        $this->render('jsMap');
+    }
+
+    public function actionMap()
+    {
+        $this->layout = '//layouts/column2';
+        $results = array();
+        $address = '';
+        if (isset($_POST['address']))
+        {
+            $address = strip_tags($_POST['address']);
+            $geocodeResult = json_decode(
+                file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($_POST['address']) . '&sensor=true')
+            );
+            if ($geocodeResult && $geocodeResult->results && is_array($geocodeResult->results))
+            {
+                foreach($geocodeResult->results as $result)
+                {
+                    if (empty($result->formatted_address) ||
+                        empty($result->geometry) ||
+                        empty($result->geometry->location) ||
+                        empty($result->geometry->location->lat) ||
+                        empty($result->geometry->location->lng))
+                    {
+                        continue;
+                    }
+                    $results[] = array(
+                        'formatted_address' => $result->formatted_address,
+                        'lat'               => $result->geometry->location->lat,
+                        'lng'               => $result->geometry->location->lng,
+                    );
+                }
+            }
+        }
+        $this->render('map', array(
+            'results' => $results,
+            'address' => $address,
+        ));
+    }
+
     /**
      * Получить массивы с клавиатуры и вывести уникальные элементы каждого массива
      */
